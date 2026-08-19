@@ -87,6 +87,10 @@
   margin-bottom: 1rem;
 }
 
+.app-id {
+  color: #000000;
+}
+
 .app-route-info {
   margin-bottom: 1.25rem;
 }

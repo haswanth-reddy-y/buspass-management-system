@@ -86,7 +86,7 @@ const ManageUsers = () => {
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => (
                     <tr key={u._id}>
-                      <td style={{ fontWeight: 700, color: "#fff" }}>{u.name}</td>
+                      <td style={{ fontWeight: 700, color: "#121010" }}>{u.name}</td>
                       <td>
                         <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                           <Mail size={14} color="var(--text-muted)" /> {u.email}

@@ -116,7 +116,7 @@ const AdminDashboard = () => {
                     {stats?.recentApplications && stats.recentApplications.length > 0 ? (
                       stats.recentApplications.map((app) => (
                         <tr key={app._id}>
-                          <td style={{ fontWeight: 700, color: "#fff" }}>{app.applicationId}</td>
+                          <td style={{ fontWeight: 700, color: "#111111" }}>{app.applicationId}</td>
                           <td>{app.studentName}</td>
                           <td>{app.studentId}</td>
                           <td>{app.source} ➔ {app.destination}</td>

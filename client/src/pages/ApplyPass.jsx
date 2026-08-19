@@ -21,16 +21,27 @@ const ApplyPass = () => {
   const [loading, setLoading] = useState(false);
 
   const routeOptions = [
-    "Route 101 - Central Express (Main Campus ↔ City Terminal)",
-    "Route 202 - Tech Corridor (Campus ↔ Tech Park & Metro)",
-    "Route 303 - North Suburban (Campus ↔ North Station)",
-    "Route 404 - South Coast (Campus ↔ Seaside Junction)"
-  ];
+  "Route 01 - Bhimavaram → Tadepalligudem",
+  "Route 02 - Tadepalligudem → Bhimavaram",
+  "Route 03 - Eluru → Tadepalligudem",
+  "Route 04 - Tadepalligudem → Eluru",
+  "Route 05 - Bhimavaram → Eluru",
+  "Route 06 - Eluru → Bhimavaram",
+  "Route 07 - Tanuku → Tadepalligudem",
+  "Route 08 - Tadepalligudem → Tanuku",
+  "Route 09 - Tanuku → Bhimavaram",
+  "Route 10 - Bhimavaram → Tanuku",
+  "Route 11 - Nidadavole → Tadepalligudem",
+  "Route 12 - Tadepalligudem → Nidadavole",
+  "Route 13 - Nidadavole → Tanuku",
+  "Route 14 - Kovvur → Nidadavole",
+  "Route 15 - Kovvur → Rajahmundry"
+];
 
   const passTypes = [
-    { title: "Monthly", duration: "30 Days", price: "$45" },
-    { title: "Quarterly", duration: "90 Days", price: "$120" },
-    { title: "Yearly", duration: "365 Days", price: "$400" }
+    { title: "Monthly", duration: "30 Days" },
+    { title: "Quarterly", duration: "90 Days" },
+    { title: "Yearly", duration: "365 Days" }
   ];
 
   const handleChange = (e) => {

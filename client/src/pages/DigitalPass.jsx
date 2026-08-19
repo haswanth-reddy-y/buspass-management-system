@@ -68,7 +68,7 @@ const DigitalPass = () => {
                   {user?.name ? user.name.charAt(0).toUpperCase() : "S"}
                 </div>
                 <div className="student-details">
-                  <h3>{user?.name || activePass.studentName}</h3>
+                  <h3 className="user-name">{user?.name || activePass.studentName}</h3>
                   <p>Student ID: {activePass.studentId}</p>
                   <p style={{ color: "var(--secondary)", fontSize: "0.8rem" }}>
                     Dept: {user?.department || "General Campus"}
@@ -91,7 +91,7 @@ const DigitalPass = () => {
               <div className="ticket-info-grid">
                 <div className="ticket-info-item">
                   <label>Pass ID</label>
-                  <span>{activePass.passId}</span>
+                  <span className="pass-id">{activePass.passId}</span>
                 </div>
                 <div className="ticket-info-item">
                   <label>Pass Type</label>

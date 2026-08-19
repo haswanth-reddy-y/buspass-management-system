@@ -116,7 +116,7 @@ const ManageApplications = () => {
                 {applications.length > 0 ? (
                   applications.map((app) => (
                     <tr key={app._id}>
-                      <td style={{ fontWeight: 700, color: "#fff" }}>{app.applicationId}</td>
+                      <td className="app-id" style={{ fontWeight: 700 }}>{app.applicationId}</td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{app.studentName}</div>
                         <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{app.studentId}</div>

@@ -145,7 +145,7 @@ const Reports = () => {
                 {filteredPasses.length > 0 ? (
                   filteredPasses.map((p) => (
                     <tr key={p._id}>
-                      <td style={{ fontWeight: 700, color: "#fff" }}>{p.passId}</td>
+                      <td className="pass-id" style={{ fontWeight: 700 }}>{p.passId}</td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{p.studentName}</div>
                         <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{p.studentId}</div>

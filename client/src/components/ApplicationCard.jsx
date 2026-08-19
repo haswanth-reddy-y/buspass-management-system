@@ -15,7 +15,7 @@ const ApplicationCard = ({ application }) => {
       <div>
         <div className="app-card-header">
           <div>
-            <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", display: "block" }}>
+            <span className="app-id" style={{ fontSize: "0.78rem", display: "block" }}>
               App ID: {application.applicationId}
             </span>
             <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--secondary)" }}>

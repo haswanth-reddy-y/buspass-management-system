@@ -13,7 +13,7 @@ const PassCard = ({ pass }) => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Bus size={18} color="var(--secondary)" />
-            <span style={{ fontWeight: 800, fontSize: "1rem", color: "#fff" }}>{pass.passId}</span>
+            <span className="pass-id" style={{ fontWeight: 800, fontSize: "1rem" }}>{pass.passId}</span>
           </div>
           <span className={`badge ${isExpired ? 'badge-expired' : 'badge-active'}`}>
             {isExpired ? <AlertCircle size={12} /> : <CheckCircle2 size={12} />}
