@@ -1,0 +1,82 @@
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.admin-table th {
+  background: var(--bg-surface-elevated);
+  padding: 1rem 1.25rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.admin-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover td {
+  background: #f8fafc;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 540px;
+  padding: 2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}

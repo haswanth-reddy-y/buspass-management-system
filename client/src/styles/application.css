@@ -1,0 +1,103 @@
+.application-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.application-form-card {
+  padding: 2.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pass-type-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.pass-type-option {
+  padding: 1.1rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.pass-type-option:hover {
+  border-color: var(--card-border-hover);
+  background: var(--bg-surface-elevated);
+}
+
+.pass-type-option.selected {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+.pass-type-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: var(--text-main);
+}
+
+.pass-type-price {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.applications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.app-card {
+  padding: 1.5rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.app-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.app-route-info {
+  margin-bottom: 1.25rem;
+}
+
+.route-endpoint {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 1.05rem;
+}
+
+.route-arrow {
+  color: var(--primary);
+  margin: 0 0.5rem;
+}
