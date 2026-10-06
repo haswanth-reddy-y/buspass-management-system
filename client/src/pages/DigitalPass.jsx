@@ -82,7 +82,7 @@ const DigitalPass = () => {
 
   return (
     <div className="digital-pass-wrapper">
-      <div style={{ textAlign: "center", maxWidth: 600 }}>
+      <div className="no-print" style={{ textAlign: "center", maxWidth: 600 }}>
         <h1>Digital Bus Ticket Pass</h1>
         <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
           Present this verified digital ticket with scannable QR code to bus conductors and campus gate scanners.
@@ -90,7 +90,7 @@ const DigitalPass = () => {
       </div>
 
       {error && (
-        <div className="alert alert-error" style={{ maxWidth: 440, width: "100%" }}>
+        <div className="alert alert-error no-print" style={{ maxWidth: 440, width: "100%" }}>
           <AlertCircle size={18} />
           <span>{error}</span>
         </div>
@@ -101,7 +101,7 @@ const DigitalPass = () => {
           Loading your verified digital pass...
         </div>
       ) : activePass ? (
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}>
+        <div className="ticket-print-wrapper" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}>
           {/* Pop-up Expiry Notification & Alert Banner */}
           <div className="no-print" style={{ width: "100%", maxWidth: 440 }}>
             <PassExpiryAlert activePass={activePass} />
@@ -218,7 +218,7 @@ const DigitalPass = () => {
                 </div>
 
                 {/* Test Scan Simulator Button */}
-                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.85rem" }}>
+                <div className="no-print" style={{ display: "flex", gap: "0.5rem", marginTop: "0.85rem" }}>
                   <button
                     type="button"
                     onClick={() => setShowScannerModal(true)}

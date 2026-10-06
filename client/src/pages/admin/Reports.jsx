@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { fetchAllPasses, fetchAllApplications, revokeUserPass } from "../../services/adminService";
 import SearchBar from "../../components/SearchBar";
-import { BarChart3, Bus, Download, Ban, ShieldAlert, CheckCircle2, AlertCircle } from "lucide-react";
+import { BarChart3, Bus, Download, Printer, Ban, ShieldAlert, CheckCircle2, AlertCircle } from "lucide-react";
 import "../../styles/admin.css";
 
 const Reports = () => {
@@ -57,6 +57,10 @@ const Reports = () => {
     a.click();
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const filteredPasses = passes.filter((p) =>
     p.passId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,18 +69,26 @@ const Reports = () => {
   );
 
   return (
-    <div className="admin-container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+    <div className="admin-container reports-page">
+      <div className="reports-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h1>Analytics & Issuance Reports</h1>
           <p style={{ color: "var(--text-muted)" }}>
             Comprehensive pass records, route demand metrics, and export capabilities.
           </p>
+          <p className="reports-print-meta">
+            Generated on {new Date().toLocaleString()}
+          </p>
         </div>
 
-        <button onClick={handleExportCSV} className="btn btn-primary">
-          <Download size={18} /> Export Report (CSV)
-        </button>
+        <div className="reports-toolbar-actions">
+          <button onClick={handlePrint} className="btn btn-secondary">
+            <Printer size={18} /> Print Report
+          </button>
+          <button onClick={handleExportCSV} className="btn btn-primary">
+            <Download size={18} /> Export Report (CSV)
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -119,10 +131,12 @@ const Reports = () => {
         </div>
       </div>
 
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <div className="reports-search">
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      </div>
 
-      <div className="glass-panel" style={{ padding: "1.25rem" }}>
-        <h3 style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>Pass Registry Table</h3>
+      <div className="glass-panel reports-table-panel" style={{ padding: "1.25rem" }}>
+        <h3 className="reports-table-title" style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>Pass Registry Table</h3>
         {loading ? (
           <div style={{ padding: "2.5rem", textAlign: "center", color: "var(--text-muted)" }}>
             Compiling report records...
@@ -138,7 +152,7 @@ const Reports = () => {
                   <th>Type</th>
                   <th>Status</th>
                   <th>Expiry Date</th>
-                  <th>Action</th>
+                  <th className="reports-actions-column">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,7 +175,7 @@ const Reports = () => {
                         </span>
                       </td>
                       <td>{new Date(p.expiryDate).toLocaleDateString()}</td>
-                      <td>
+                      <td className="reports-actions-column">
                         {p.status === "Active" ? (
                           <button
                             onClick={() => handleRevokePass(p._id, p.passId)}

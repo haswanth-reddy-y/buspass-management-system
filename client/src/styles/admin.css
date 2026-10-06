@@ -84,3 +84,118 @@
   gap: 1rem;
   margin-top: 1.5rem;
 }
+
+.reports-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.reports-print-meta {
+  display: none;
+}
+
+@media print {
+  @page report {
+    size: landscape;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .app-layout > header,
+  .app-layout > .app-body > aside,
+  .app-layout > footer,
+  .reports-toolbar-actions,
+  .reports-search,
+  .reports-actions-column {
+    display: none !important;
+  }
+
+  .app-layout,
+  .app-body,
+  .main-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .page-transition {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .reports-page {
+    page: report;
+    display: flex !important;
+    gap: 1rem !important;
+  }
+
+  .reports-print-meta {
+    display: block;
+    margin-top: 0.35rem;
+    color: #475569 !important;
+    font-size: 0.8rem;
+  }
+
+  .reports-page .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .reports-page .glass-panel,
+  .reports-page .stat-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .reports-page .stat-card {
+    padding: 0.75rem;
+  }
+
+  .reports-page .stat-icon-wrapper {
+    display: none;
+  }
+
+  .reports-page .reports-table-panel {
+    padding: 0 !important;
+  }
+
+  .reports-page .table-responsive {
+    overflow: visible !important;
+    border: 0 !important;
+  }
+
+  .reports-page .admin-table {
+    width: 100%;
+    font-size: 9pt;
+  }
+
+  .reports-page .admin-table th,
+  .reports-page .admin-table td {
+    padding: 0.45rem 0.55rem;
+    color: #000000 !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .reports-page .admin-table th {
+    background: #f1f5f9 !important;
+  }
+
+  .reports-page .admin-table tr,
+  .reports-page .admin-table td {
+    break-inside: avoid;
+  }
+}
