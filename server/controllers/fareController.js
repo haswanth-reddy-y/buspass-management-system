@@ -1,6 +1,8 @@
 const COLLEGE_LOCATION = process.env.COLLEGE_LOCATION || "534101, India";
-const BASE_RATE_PER_KM = 3.0; // ₹3.0 per km without tolls
-const TOLL_RATE_PER_KM = 4.5; // ₹4.5 per km with tolls
+const DEFAULT_BASE_FARE = 50.0; // ₹50 default base value for calculating
+const TOLL_RATE_PER_KM = 1.5;   // ₹1.5 per km with tolls
+const TOLL_FREE_RATE_PER_KM = 1.0; // ₹1.0 per km toll-free
+const SAME_PINCODE_MONTHLY_FARE = 650.0; // ₹650 per month for same pincode / local zone
 
 // Cache for geocoded college location to avoid redundant lookups
 let cachedCollegeLocation = null;
@@ -225,20 +227,67 @@ const calculateRouteOSRM = async (origin, dest) => {
 };
 
 /**
+ * Extracts 6-digit PIN code from a location string.
+ * @param {string} locationStr
+ * @returns {string}
+ */
+const extractPincode = (locationStr) => {
+  if (!locationStr) return "534101";
+  const match = String(locationStr).match(/\b([1-9][0-9]{5})\b/);
+  return match ? match[1] : "534101";
+};
+
+/**
  * Core Fare Calculation logic for round trips.
+ * - Default Base Fare: ₹50
+ * - Distance rates: ₹1.5/km (with tolls), ₹1.0/km (toll-free)
+ * - Same Pincode / Local Zone: ₹650/month (Concession rate)
  * @param {number} oneWayDistanceKm
  * @param {boolean} routeHasTolls
+ * @param {boolean} isSamePincode
  * @returns {object}
  */
-const computeFareDetails = (oneWayDistanceKm, routeHasTolls) => {
+const computeFareDetails = (oneWayDistanceKm, routeHasTolls, isSamePincode = false) => {
   const roundTripDistanceKm = Number((oneWayDistanceKm * 2).toFixed(2));
-  const ratePerKm = routeHasTolls ? TOLL_RATE_PER_KM : BASE_RATE_PER_KM;
-  const totalFare = Number((roundTripDistanceKm * ratePerKm).toFixed(2));
+  const ratePerKm = routeHasTolls ? TOLL_RATE_PER_KM : TOLL_FREE_RATE_PER_KM;
+
+  if (isSamePincode) {
+    const monthlyFare = SAME_PINCODE_MONTHLY_FARE; // ₹650 / month
+    const dailyFare = Number((SAME_PINCODE_MONTHLY_FARE / 22).toFixed(2)); // ~₹29.55 / travel day
+    const quarterlyFare = Number((SAME_PINCODE_MONTHLY_FARE * 3).toFixed(2)); // ₹1,950
+    const yearlyFare = Number((SAME_PINCODE_MONTHLY_FARE * 10).toFixed(2)); // ₹6,500 (10 academic months)
+
+    return {
+      isSamePincode: true,
+      baseFare: 0,
+      ratePerKm,
+      roundTripDistanceKm,
+      distanceFare: 0,
+      dailyFare,
+      monthlyFare,
+      quarterlyFare,
+      yearlyFare,
+      totalFare: dailyFare
+    };
+  }
+
+  const distanceFare = Number((roundTripDistanceKm * ratePerKm).toFixed(2));
+  const dailyFare = Number((DEFAULT_BASE_FARE + distanceFare).toFixed(2));
+  const monthlyFare = Number((dailyFare * 22).toFixed(2));
+  const quarterlyFare = Number((dailyFare * 66).toFixed(2));
+  const yearlyFare = Number((dailyFare * 220).toFixed(2));
 
   return {
+    isSamePincode: false,
+    baseFare: DEFAULT_BASE_FARE,
     ratePerKm,
     roundTripDistanceKm,
-    totalFare
+    distanceFare,
+    dailyFare,
+    monthlyFare,
+    quarterlyFare,
+    yearlyFare,
+    totalFare: dailyFare
   };
 };
 
@@ -268,6 +317,7 @@ const calculateFare = async (req, res) => {
 
     // 2. Resolve origin and destination coordinates (100% Free)
     const collegeLocationStr = process.env.COLLEGE_LOCATION || COLLEGE_LOCATION;
+    const collegePincode = extractPincode(collegeLocationStr);
 
     let originGeo, destGeo;
     try {
@@ -300,27 +350,38 @@ const calculateFare = async (req, res) => {
       ? Boolean(routeHasTolls === true || String(routeHasTolls).toLowerCase() === "true")
       : routeResult.hasTolls;
 
-    const { roundTripDistanceKm, ratePerKm, totalFare } = computeFareDetails(
+    // 5. Same pincode check (if student lives in same pincode as college or within 1.5 km)
+    const isSamePincode = cleanPincode === collegePincode || oneWayDistanceKm <= 1.5;
+
+    const fareDetails = computeFareDetails(
       oneWayDistanceKm,
-      hasTolls
+      hasTolls,
+      isSamePincode
     );
 
-    // 5. Return success response
+    // 6. Return success response
     return res.status(200).json({
       success: true,
       message: "Bus fare calculated successfully.",
       data: {
         studentPincode: cleanPincode,
         collegeLocation: collegeLocationStr,
+        collegePincode,
+        isSamePincode: fareDetails.isSamePincode,
         originAddress: originGeo.displayName,
         destinationAddress: destGeo.displayName,
         routeHasTolls: hasTolls,
-        ratePerKm,
+        baseFare: fareDetails.baseFare,
+        ratePerKm: fareDetails.ratePerKm,
         oneWayDistanceKm,
         oneWayDistanceText: `${oneWayDistanceKm} km`,
-        roundTripDistanceKm,
+        roundTripDistanceKm: fareDetails.roundTripDistanceKm,
         estimatedDurationText,
-        totalFare,
+        dailyFare: fareDetails.dailyFare,
+        monthlyFare: fareDetails.monthlyFare,
+        quarterlyFare: fareDetails.quarterlyFare,
+        yearlyFare: fareDetails.yearlyFare,
+        totalFare: fareDetails.totalFare,
         currency: "INR"
       }
     });
@@ -338,10 +399,13 @@ module.exports = {
   calculateFare,
   isValidIndianPincode,
   computeFareDetails,
+  extractPincode,
   geocodePincode,
   geocodeCollegeLocation,
   calculateRouteOSRM,
   COLLEGE_LOCATION,
-  BASE_RATE_PER_KM,
-  TOLL_RATE_PER_KM
+  DEFAULT_BASE_FARE,
+  TOLL_RATE_PER_KM,
+  TOLL_FREE_RATE_PER_KM,
+  SAME_PINCODE_MONTHLY_FARE
 };

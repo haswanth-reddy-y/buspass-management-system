@@ -10,8 +10,10 @@ const applicationSchema = new mongoose.Schema(
     source: { type: String, required: true },
     destination: { type: String, required: true },
     pincode: { type: String, default: "" },
-    pickupPoint: { type: String, default: "" }, // Morning Pickup from Home
-    dropPoint: { type: String, default: "" },   // Evening Drop to Home
+    villageTown: { type: String, default: "" }, // Student Village or Town name (manual input)
+    stopName: { type: String, default: "" },    // Student Boarding Stop name (manual input)
+    pickupPoint: { type: String, default: "" }, // Morning Pickup Point
+    dropPoint: { type: String, default: "" },   // Evening Drop Point (manual input)
     oneWayDistanceKm: { type: Number, default: 0 },
     roundTripDistanceKm: { type: Number, default: 0 },
     dailyFare: { type: Number, default: 0 },

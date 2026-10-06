@@ -106,6 +106,10 @@ const DigitalPass = () => {
                   <span className="pass-id">{activePass.passId}</span>
                 </div>
                 <div className="ticket-info-item">
+                  <label>Allotted Route</label>
+                  <span style={{ color: "#38bdf8", fontWeight: 700 }}>{activePass.route}</span>
+                </div>
+                <div className="ticket-info-item">
                   <label>Pass Type</label>
                   <span>{activePass.passType} Pass</span>
                 </div>

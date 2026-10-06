@@ -122,6 +122,8 @@ const updateApplicationStatus = async (req, res, next) => {
         source: application.source,
         destination: application.destination,
         pincode: application.pincode,
+        villageTown: application.villageTown || "",
+        stopName: application.stopName || "",
         pickupPoint: application.pickupPoint,
         dropPoint: application.dropPoint,
         oneWayDistanceKm: application.oneWayDistanceKm,

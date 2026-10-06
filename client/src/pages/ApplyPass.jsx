@@ -12,7 +12,10 @@ import {
   Sunset,
   CheckCircle2,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  Home,
+  Navigation,
+  Compass
 } from "lucide-react";
 import "../styles/application.css";
 
@@ -23,11 +26,10 @@ const ApplyPass = () => {
   // Form State
   const [formData, setFormData] = useState({
     route: "Pending Admin Allotment",
-    source: "",
-    destination: "College Campus, India",
     pincode: "",
-    pickupPoint: "",
-    dropPoint: "",
+    villageTown: "",
+    stopName: "",
+    dropPoint: "College Campus, India",
     passType: "Monthly"
   });
 
@@ -40,17 +42,18 @@ const ApplyPass = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Duration multipliers (approx. working/travel days)
-  const durationMultipliers = {
-    Monthly: 22,
-    Quarterly: 66,
-    Yearly: 220
-  };
-
   const getPassPrice = (type) => {
-    if (!fareData?.totalFare) return null;
-    const days = durationMultipliers[type] || 22;
-    return Number((fareData.totalFare * days).toFixed(2));
+    if (!fareData) return null;
+    if (fareData.isSamePincode) {
+      if (type === "Monthly") return 650;
+      if (type === "Quarterly") return 1950;
+      if (type === "Yearly") return 6500;
+      return 650;
+    }
+    if (type === "Monthly") return fareData.monthlyFare || Number((fareData.dailyFare * 22).toFixed(2));
+    if (type === "Quarterly") return fareData.quarterlyFare || Number((fareData.dailyFare * 66).toFixed(2));
+    if (type === "Yearly") return fareData.yearlyFare || Number((fareData.dailyFare * 220).toFixed(2));
+    return Number((fareData.dailyFare * 22).toFixed(2));
   };
 
   const passTypes = [
@@ -59,7 +62,7 @@ const ApplyPass = () => {
     { title: "Yearly", duration: "365 Days (220 Travel Days)" }
   ];
 
-  // Fetch Fare from Backend API (Backend automatically calculates road distance & toll rate)
+  // Fetch Fare from Backend API (Free Nominatim + OSRM)
   const handleFetchFare = async (pincodeOverride) => {
     const pin = pincodeOverride !== undefined ? pincodeOverride : formData.pincode;
 
@@ -70,7 +73,7 @@ const ApplyPass = () => {
     }
 
     if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
-      setFareError("PIN code must be a 6-digit Indian postal code (e.g., 560034).");
+      setFareError("PIN code must be a 6-digit Indian postal code (e.g., 534101, 560034).");
       return;
     }
 
@@ -78,21 +81,20 @@ const ApplyPass = () => {
     setCalculatingFare(true);
 
     try {
-      // Backend automatically checks distance and tolls
       const response = await calculateBusFare(cleanPin);
       if (response.success && response.data) {
         setFareData(response.data);
 
-        const homeLocality = response.data.originAddress || `${cleanPin}, India`;
-        const collegeLocality = response.data.destinationAddress || "College Campus, India";
+        // Pre-fill village/town suggestion from geocoded address if not already entered by student
+        const suggestedTown = response.data.originAddress
+          ? response.data.originAddress.split(",")[0].trim()
+          : "";
 
-        // Auto-assign Pickup and Drop locations
         setFormData((prev) => ({
           ...prev,
-          source: homeLocality,
-          destination: collegeLocality,
-          pickupPoint: homeLocality,
-          dropPoint: homeLocality
+          pincode: cleanPin,
+          villageTown: prev.villageTown || suggestedTown,
+          dropPoint: prev.dropPoint || response.data.destinationAddress || "College Campus, India"
         }));
       } else {
         setFareError(response.message || "Failed to calculate distance & fare.");
@@ -114,20 +116,38 @@ const ApplyPass = () => {
       return;
     }
 
+    if (!formData.villageTown || !formData.villageTown.trim()) {
+      setError("Please enter your Village or Town name.");
+      return;
+    }
+
+    if (!formData.stopName || !formData.stopName.trim()) {
+      setError("Please enter your Boarding Stop name.");
+      return;
+    }
+
+    if (!formData.dropPoint || !formData.dropPoint.trim()) {
+      setError("Please enter your Drop Location.");
+      return;
+    }
+
     setLoading(true);
 
     const calculatedTotal = getPassPrice(formData.passType) || 0;
+    const formattedPickup = `${formData.villageTown.trim()} - ${formData.stopName.trim()}`;
 
     const payload = {
       route: "Pending Admin Allotment",
-      source: formData.source || fareData.originAddress,
-      destination: formData.destination || fareData.destinationAddress,
-      pincode: formData.pincode,
-      pickupPoint: formData.pickupPoint || fareData.originAddress,
-      dropPoint: formData.dropPoint || fareData.originAddress,
+      source: formData.villageTown.trim(),
+      destination: formData.dropPoint.trim(),
+      pincode: formData.pincode.trim(),
+      villageTown: formData.villageTown.trim(),
+      stopName: formData.stopName.trim(),
+      pickupPoint: formattedPickup,
+      dropPoint: formData.dropPoint.trim(),
       oneWayDistanceKm: fareData.oneWayDistanceKm,
       roundTripDistanceKm: fareData.roundTripDistanceKm,
-      dailyFare: fareData.totalFare,
+      dailyFare: fareData.dailyFare,
       totalFare: calculatedTotal,
       routeHasTolls: fareData.routeHasTolls,
       passType: formData.passType
@@ -147,11 +167,11 @@ const ApplyPass = () => {
   };
 
   return (
-    <div className="application-container" style={{ maxWidth: 860 }}>
+    <div className="application-container" style={{ maxWidth: 880 }}>
       <div style={{ marginBottom: "2rem" }}>
         <h1>Apply for Student Bus Pass</h1>
         <p style={{ color: "var(--text-muted)" }}>
-          Enter your home PIN code to fetch distance and fare for morning pickup and evening drop.
+          Calculate distance-based fare using your postal PIN code, specify your stop & village details manually, and apply for your pass.
         </p>
       </div>
 
@@ -171,9 +191,9 @@ const ApplyPass = () => {
 
       <div className="glass-panel application-form-card">
         <form onSubmit={handleSubmit}>
-          {/* Section 1: Home PIN Code Input (No tolls option; backend handles tolls) */}
+          {/* Section 1: Postal PIN Code */}
           <div style={{ marginBottom: "1.75rem" }}>
-            <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8 }}>
+            <h3 style={{ fontSize: "1.05rem", marginBottom: "0.85rem", display: "flex", alignItems: "center", gap: 8 }}>
               <MapPin size={20} color="var(--primary)" />
               1. Home Postal PIN Code
             </h3>
@@ -182,7 +202,7 @@ const ApplyPass = () => {
               <label>
                 Student Home PIN Code <span style={{ color: "var(--danger)" }}>*</span>
               </label>
-              <div style={{ display: "flex", gap: "0.75rem", maxWidth: 500 }}>
+              <div style={{ display: "flex", gap: "0.75rem", maxWidth: 520 }}>
                 <div style={{ position: "relative", flex: 1 }}>
                   <MapPin
                     size={18}
@@ -197,7 +217,7 @@ const ApplyPass = () => {
                       const val = e.target.value.replace(/\D/g, "");
                       setFormData({ ...formData, pincode: val });
                     }}
-                    placeholder="e.g. 560034"
+                    placeholder="e.g. 534101"
                     className="form-input"
                     style={{ paddingLeft: 42 }}
                     required
@@ -211,11 +231,11 @@ const ApplyPass = () => {
                   className="btn btn-primary"
                   style={{ padding: "0 1.5rem", whiteSpace: "nowrap" }}
                 >
-                  {calculatingFare ? "Fetching..." : "Fetch Fare"}
+                  {calculatingFare ? "Calculating..." : "Fetch Fare"}
                 </button>
               </div>
-              <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 4 }}>
-                Enter your 6-digit Indian PIN code. Driving distance and toll route rates are automatically evaluated.
+              <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 6, display: "block" }}>
+                Fare rate: <strong>₹650/month</strong> for same college PIN code ({fareData?.collegePincode || "534101"}), or <strong>₹50 default base + ₹1.5/km (toll) / ₹1.0/km (toll-free)</strong>.
               </small>
             </div>
 
@@ -227,83 +247,197 @@ const ApplyPass = () => {
             )}
           </div>
 
-          {/* Section 2: Calculated Commute & Pickup / Drop Points */}
+          {/* Section 2: Manual Student Stop Details (Village/Town, Stop Name, Drop Location) */}
+          <div style={{ marginBottom: "1.75rem", padding: "1.25rem", background: "#f8fafc", borderRadius: "var(--radius-md)", border: "1px solid var(--card-border)" }}>
+            <h3 style={{ fontSize: "1.05rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text-main)" }}>
+              <Navigation size={18} color="var(--primary)" />
+              2. Student Stop & Commute Details (Manual Input)
+            </h3>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+              {/* Village or Town Name */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>
+                  Village / Town Name <span style={{ color: "var(--danger)" }}>*</span>
+                </label>
+                <div style={{ position: "relative" }}>
+                  <Home size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
+                  <input
+                    type="text"
+                    value={formData.villageTown}
+                    onChange={(e) => setFormData({ ...formData, villageTown: e.target.value })}
+                    placeholder="e.g. Tadepalligudem / Pentapadu"
+                    className="form-input"
+                    style={{ paddingLeft: 42 }}
+                    required
+                  />
+                </div>
+                <small style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                  Enter your native village or town name.
+                </small>
+              </div>
+
+              {/* Boarding Stop Name */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>
+                  Boarding / Pickup Stop Name <span style={{ color: "var(--danger)" }}>*</span>
+                </label>
+                <div style={{ position: "relative" }}>
+                  <Compass size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
+                  <input
+                    type="text"
+                    value={formData.stopName}
+                    onChange={(e) => setFormData({ ...formData, stopName: e.target.value })}
+                    placeholder="e.g. Main Bus Stand / Clock Tower"
+                    className="form-input"
+                    style={{ paddingLeft: 42 }}
+                    required
+                  />
+                </div>
+                <small style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                  Specific stop where you board the bus.
+                </small>
+              </div>
+
+              {/* Drop Location */}
+              <div className="form-group" style={{ gridColumn: "1 / -1", marginBottom: 0 }}>
+                <label>
+                  Drop Location (Campus Arrival & Return) <span style={{ color: "var(--danger)" }}>*</span>
+                </label>
+                <div style={{ position: "relative" }}>
+                  <MapPin size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
+                  <input
+                    type="text"
+                    value={formData.dropPoint}
+                    onChange={(e) => setFormData({ ...formData, dropPoint: e.target.value })}
+                    placeholder="e.g. College Campus Main Gate / Engineering Block"
+                    className="form-input"
+                    style={{ paddingLeft: 42 }}
+                    required
+                  />
+                </div>
+                <small style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                  College arrival drop and return pickup point (manually customizable).
+                </small>
+              </div>
+            </div>
+
+            {/* Commute Summary Cards */}
+            {(formData.villageTown || formData.stopName) && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: "1rem",
+                  marginTop: "1.25rem"
+                }}
+              >
+                {/* Morning Commute */}
+                <div
+                  style={{
+                    background: "#ffffff",
+                    padding: "1rem 1.25rem",
+                    borderRadius: 8,
+                    border: "1px solid var(--card-border)"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d97706", fontWeight: 700, fontSize: "0.82rem", marginBottom: 6 }}>
+                    <Sunrise size={16} /> MORNING COMMUTE
+                  </div>
+                  <div style={{ fontSize: "0.85rem" }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>BOARDING PICKUP:</div>
+                    <strong style={{ color: "var(--text-main)" }}>
+                      {formData.stopName ? `${formData.stopName}, ` : ""}{formData.villageTown || "Your Village/Town"}
+                    </strong>
+                  </div>
+                  <div style={{ fontSize: "0.85rem", marginTop: 6 }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>CAMPUS DROP:</div>
+                    <span style={{ color: "var(--text-main)" }}>{formData.dropPoint || "College Campus, India"}</span>
+                  </div>
+                </div>
+
+                {/* Evening Commute */}
+                <div
+                  style={{
+                    background: "#ffffff",
+                    padding: "1rem 1.25rem",
+                    borderRadius: 8,
+                    border: "1px solid var(--card-border)"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#4f46e5", fontWeight: 700, fontSize: "0.82rem", marginBottom: 6 }}>
+                    <Sunset size={16} /> EVENING RETURN
+                  </div>
+                  <div style={{ fontSize: "0.85rem" }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>CAMPUS PICKUP:</div>
+                    <span style={{ color: "var(--text-main)" }}>{formData.dropPoint || "College Campus, India"}</span>
+                  </div>
+                  <div style={{ fontSize: "0.85rem", marginTop: 6 }}>
+                    <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>RETURN DROP:</div>
+                    <strong style={{ color: "var(--text-main)" }}>
+                      {formData.stopName ? `${formData.stopName}, ` : ""}{formData.villageTown || "Your Village/Town"}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section 3: Verified Route Distance & Fare Breakdown */}
           {fareData && (
             <div
               style={{
                 marginBottom: "2rem",
                 padding: "1.5rem",
                 borderRadius: "var(--radius-md)",
-                background: "linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(59, 130, 246, 0.08) 100%)",
-                border: "1px solid #bfdbfe"
+                background: fareData.isSamePincode
+                  ? "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.09) 100%)"
+                  : "linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(59, 130, 246, 0.08) 100%)",
+                border: `1px solid ${fareData.isSamePincode ? "#a7f3d0" : "#bfdbfe"}`
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "1rem" }}>
-                <CheckCircle2 color="#2563eb" size={20} />
-                <h3 style={{ fontSize: "1.05rem", margin: 0, color: "var(--text-main)" }}>
-                  2. Commute Route & Pickup/Drop Stops
-                </h3>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircle2 color={fareData.isSamePincode ? "#059669" : "#2563eb"} size={20} />
+                  <h3 style={{ fontSize: "1.05rem", margin: 0, color: "var(--text-main)" }}>
+                    3. Fare & Commute Calculation
+                  </h3>
+                </div>
+
+                {fareData.isSamePincode ? (
+                  <span
+                    style={{
+                      background: "#d1fae5",
+                      color: "#065f46",
+                      padding: "0.3rem 0.75rem",
+                      borderRadius: 20,
+                      fontSize: "0.8rem",
+                      fontWeight: 700
+                    }}
+                  >
+                    🎉 Same Pincode Concession Rate: ₹650 / Month
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      background: "#e0e7ff",
+                      color: "#3730a3",
+                      padding: "0.3rem 0.75rem",
+                      borderRadius: 20,
+                      fontSize: "0.8rem",
+                      fontWeight: 700
+                    }}
+                  >
+                    Standard Route: Base ₹50 + ₹{fareData.ratePerKm}/km
+                  </span>
+                )}
               </div>
 
-              {/* Morning Pickup & Evening Drop Cards */}
+              {/* Stats Bar */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                  gap: "1rem",
-                  marginBottom: "1.25rem"
-                }}
-              >
-                {/* Morning Journey */}
-                <div
-                  style={{
-                    background: "#ffffff",
-                    padding: "1rem 1.25rem",
-                    borderRadius: 10,
-                    border: "1px solid var(--card-border)"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d97706", fontWeight: 700, fontSize: "0.85rem", marginBottom: 6 }}>
-                    <Sunrise size={18} /> MORNING COMMUTE
-                  </div>
-                  <div style={{ fontSize: "0.88rem" }}>
-                    <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>STARTING PICKUP (Home):</div>
-                    <strong style={{ color: "var(--text-main)" }}>{fareData.originAddress}</strong>
-                  </div>
-                  <div style={{ fontSize: "0.88rem", marginTop: 8 }}>
-                    <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>COLLEGE DROP:</div>
-                    <span style={{ color: "var(--text-main)" }}>{fareData.destinationAddress}</span>
-                  </div>
-                </div>
-
-                {/* Evening Return */}
-                <div
-                  style={{
-                    background: "#ffffff",
-                    padding: "1rem 1.25rem",
-                    borderRadius: 10,
-                    border: "1px solid var(--card-border)"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#4f46e5", fontWeight: 700, fontSize: "0.85rem", marginBottom: 6 }}>
-                    <Sunset size={18} /> EVENING RETURN
-                  </div>
-                  <div style={{ fontSize: "0.88rem" }}>
-                    <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>CAMPUS PICKUP:</div>
-                    <span style={{ color: "var(--text-main)" }}>{fareData.destinationAddress}</span>
-                  </div>
-                  <div style={{ fontSize: "0.88rem", marginTop: 8 }}>
-                    <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>EVENING RETURN DROP (Home):</div>
-                    <strong style={{ color: "var(--text-main)" }}>{fareData.originAddress}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Distance & Rate Summary Bar */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
                   gap: "0.75rem",
                   background: "#ffffff",
                   padding: "1rem",
@@ -313,37 +447,40 @@ const ApplyPass = () => {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>ONE-WAY</div>
-                  <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--text-main)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>ONE-WAY</div>
+                  <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--text-main)" }}>
                     {fareData.oneWayDistanceKm} km
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>ROUND-TRIP (DAILY)</div>
-                  <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--primary)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>ROUND-TRIP (DAILY)</div>
+                  <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--primary)" }}>
                     {fareData.roundTripDistanceKm} km
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>RATE</div>
-                  <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--text-main)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>KM RATE</div>
+                  <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--text-main)" }}>
                     ₹{fareData.ratePerKm}/km
                   </div>
-                  <div style={{ fontSize: "0.7rem", color: fareData.routeHasTolls ? "#d97706" : "#059669" }}>
-                    {fareData.routeHasTolls ? "(Toll Road)" : "(Standard)"}
+                  <div style={{ fontSize: "0.68rem", color: fareData.routeHasTolls ? "#d97706" : "#059669" }}>
+                    {fareData.routeHasTolls ? "(Toll Road: ₹1.5)" : "(Toll-Free: ₹1.0)"}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>DAILY FARE</div>
-                  <div style={{ fontWeight: 800, fontSize: "1.2rem", color: "#047857" }}>
-                    ₹{fareData.totalFare}
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>DAILY FARE</div>
+                  <div style={{ fontWeight: 800, fontSize: "1.15rem", color: "#047857" }}>
+                    ₹{fareData.dailyFare}
+                  </div>
+                  <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                    {fareData.isSamePincode ? "(Concession daily avg)" : "(₹50 base + km)"}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Section 3: Bus Route Allotment Notice (Allotted manually by Admin upon approval) */}
+          {/* Section 4: Bus Route Notice */}
           <div
             style={{
               marginBottom: "1.75rem",
@@ -359,7 +496,7 @@ const ApplyPass = () => {
             <Bus size={24} color="var(--primary)" />
             <div>
               <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-main)" }}>
-                Bus Route Allotment
+                Official Bus Route Allotment
               </div>
               <div style={{ fontSize: "0.84rem", color: "var(--text-muted)" }}>
                 Your official bus route line will be manually allotted by the transport administrator at the time of approval.
@@ -367,13 +504,13 @@ const ApplyPass = () => {
             </div>
           </div>
 
-          {/* Section 4: Pass Duration with Dynamic Calculated Prices */}
+          {/* Section 5: Pass Duration with Dynamic Calculated Prices */}
           <div className="form-group" style={{ marginTop: "1rem" }}>
             <label>
-              3. Pass Type & Duration{" "}
+              4. Pass Type & Duration{" "}
               {fareData && (
                 <span style={{ color: "var(--primary)", fontWeight: 600 }}>
-                  (Pricing dynamically calculated from round-trip distance)
+                  ({fareData.isSamePincode ? "Local Flat Rate Concession: ₹650/month" : "Dynamic Distance Pricing"})
                 </span>
               )}
             </label>
@@ -416,11 +553,13 @@ const ApplyPass = () => {
               }}
             >
               <div>
-                <span style={{ fontSize: "0.9rem", color: "#166534" }}>
+                <span style={{ fontSize: "0.9rem", color: "#166534", fontWeight: 700 }}>
                   Total {formData.passType} Pass Fee:
                 </span>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                  Daily round-trip commute included for entire validity
+                  {fareData.isSamePincode
+                    ? "Local student concession applied (₹650/month)"
+                    : "Base ₹50 + round-trip commute included for entire duration"}
                 </div>
               </div>
               <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "#15803d" }}>

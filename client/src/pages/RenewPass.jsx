@@ -4,13 +4,17 @@ import { useAuth } from "../context/AuthContext";
 import { fetchMyPasses, submitPassRenewal, calculateBusFare } from "../services/passService";
 import {
   RefreshCw,
-  Bus,
   AlertCircle,
   CheckCircle,
+  Bus,
+  Calendar,
   MapPin,
   Sunrise,
   Sunset,
-  CheckCircle2
+  CheckCircle2,
+  Home,
+  Compass,
+  Navigation
 } from "lucide-react";
 import "../styles/application.css";
 
@@ -21,9 +25,14 @@ const RenewPass = () => {
   const [passes, setPasses] = useState([]);
   const [selectedPass, setSelectedPass] = useState(null);
   const [passType, setPassType] = useState("Monthly");
-  const [pincode, setPincode] = useState("");
 
-  // Fare State
+  // Manual Commute & Stop State
+  const [pincode, setPincode] = useState("");
+  const [villageTown, setVillageTown] = useState("");
+  const [stopName, setStopName] = useState("");
+  const [dropPoint, setDropPoint] = useState("College Campus, India");
+
+  // Fare Calculation State
   const [fareData, setFareData] = useState(null);
   const [calculatingFare, setCalculatingFare] = useState(false);
   const [fareError, setFareError] = useState("");
@@ -33,13 +42,6 @@ const RenewPass = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Duration multipliers (approx. working/travel days)
-  const durationMultipliers = {
-    Monthly: 22,
-    Quarterly: 66,
-    Yearly: 220
-  };
-
   useEffect(() => {
     const loadPasses = async () => {
       try {
@@ -47,22 +49,7 @@ const RenewPass = () => {
         setPasses(data);
         if (data.length > 0) {
           const firstPass = data[0];
-          setSelectedPass(firstPass);
-          setPincode(firstPass.pincode || "");
-
-          if (firstPass.dailyFare) {
-            setFareData({
-              originAddress: firstPass.pickupPoint || firstPass.source,
-              destinationAddress: firstPass.destination,
-              oneWayDistanceKm: firstPass.oneWayDistanceKm || 0,
-              roundTripDistanceKm: firstPass.roundTripDistanceKm || 0,
-              ratePerKm: firstPass.routeHasTolls ? 4.5 : 3.0,
-              totalFare: firstPass.dailyFare,
-              routeHasTolls: Boolean(firstPass.routeHasTolls)
-            });
-          } else if (firstPass.pincode && /^[1-9][0-9]{5}$/.test(firstPass.pincode)) {
-            fetchFareForPass(firstPass.pincode);
-          }
+          handleSelectPass(firstPass);
         }
       } catch (err) {
         setError(err.message || "Failed to load passes");
@@ -70,24 +57,23 @@ const RenewPass = () => {
         setLoading(false);
       }
     };
-    if (token) loadPasses();
+
+    loadPasses();
   }, [token]);
 
-  const fetchFareForPass = async (pin) => {
-    const cleanPin = String(pin).trim();
-    if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
-      setFareError("Enter a valid 6-digit Indian postal PIN code.");
-      return;
-    }
+  const fetchFareForPass = async (pinToUse) => {
+    const cleanPin = String(pinToUse).trim();
+    if (!cleanPin || !/^[1-9][0-9]{5}$/.test(cleanPin)) return;
 
-    setFareError("");
     setCalculatingFare(true);
+    setFareError("");
+
     try {
       const response = await calculateBusFare(cleanPin);
       if (response.success && response.data) {
         setFareData(response.data);
       } else {
-        setFareError(response.message || "Failed to calculate renewal fare.");
+        setFareError(response.message || "Failed to recalculate fare for renewed route.");
       }
     } catch (err) {
       setFareError(err.message || "Could not connect to fare service.");
@@ -99,18 +85,11 @@ const RenewPass = () => {
   const handleSelectPass = (pass) => {
     setSelectedPass(pass);
     setPincode(pass.pincode || "");
+    setVillageTown(pass.villageTown || pass.source || "");
+    setStopName(pass.stopName || "");
+    setDropPoint(pass.dropPoint || pass.destination || "College Campus, India");
 
-    if (pass.dailyFare) {
-      setFareData({
-        originAddress: pass.pickupPoint || pass.source,
-        destinationAddress: pass.destination,
-        oneWayDistanceKm: pass.oneWayDistanceKm || 0,
-        roundTripDistanceKm: pass.roundTripDistanceKm || 0,
-        ratePerKm: pass.routeHasTolls ? 4.5 : 3.0,
-        totalFare: pass.dailyFare,
-        routeHasTolls: Boolean(pass.routeHasTolls)
-      });
-    } else if (pass.pincode && /^[1-9][0-9]{5}$/.test(pass.pincode)) {
+    if (pass.pincode && /^[1-9][0-9]{5}$/.test(pass.pincode)) {
       fetchFareForPass(pass.pincode);
     } else {
       setFareData(null);
@@ -118,9 +97,17 @@ const RenewPass = () => {
   };
 
   const getPassPrice = (type) => {
-    if (!fareData?.totalFare) return null;
-    const days = durationMultipliers[type] || 22;
-    return Number((fareData.totalFare * days).toFixed(2));
+    if (!fareData) return null;
+    if (fareData.isSamePincode) {
+      if (type === "Monthly") return 650;
+      if (type === "Quarterly") return 1950;
+      if (type === "Yearly") return 6500;
+      return 650;
+    }
+    if (type === "Monthly") return fareData.monthlyFare || Number((fareData.dailyFare * 22).toFixed(2));
+    if (type === "Quarterly") return fareData.quarterlyFare || Number((fareData.dailyFare * 66).toFixed(2));
+    if (type === "Yearly") return fareData.yearlyFare || Number((fareData.dailyFare * 220).toFixed(2));
+    return Number((fareData.dailyFare * 22).toFixed(2));
   };
 
   const passTypes = [
@@ -139,20 +126,38 @@ const RenewPass = () => {
       return;
     }
 
+    if (!villageTown || !villageTown.trim()) {
+      setError("Please enter your Village or Town name.");
+      return;
+    }
+
+    if (!stopName || !stopName.trim()) {
+      setError("Please enter your Boarding Stop name.");
+      return;
+    }
+
+    if (!dropPoint || !dropPoint.trim()) {
+      setError("Please enter your Drop Location.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const calculatedTotal = getPassPrice(passType) || 0;
+      const calculatedTotal = getPassPrice(passType) || (selectedPass.totalFare || 0);
+      const formattedPickup = `${villageTown.trim()} - ${stopName.trim()}`;
 
       await submitPassRenewal(
         {
           passId: selectedPass.passId,
           passType,
           pincode: pincode || selectedPass.pincode,
-          pickupPoint: fareData?.originAddress || selectedPass.pickupPoint || selectedPass.source,
-          dropPoint: fareData?.originAddress || selectedPass.dropPoint || selectedPass.source,
+          villageTown: villageTown.trim(),
+          stopName: stopName.trim(),
+          pickupPoint: formattedPickup,
+          dropPoint: dropPoint.trim(),
           oneWayDistanceKm: fareData?.oneWayDistanceKm || selectedPass.oneWayDistanceKm || 0,
           roundTripDistanceKm: fareData?.roundTripDistanceKm || selectedPass.roundTripDistanceKm || 0,
-          dailyFare: fareData?.totalFare || selectedPass.dailyFare || 0,
+          dailyFare: fareData?.dailyFare || selectedPass.dailyFare || 0,
           totalFare: calculatedTotal,
           routeHasTolls: fareData?.routeHasTolls !== undefined ? fareData.routeHasTolls : selectedPass.routeHasTolls
         },
@@ -168,11 +173,11 @@ const RenewPass = () => {
   };
 
   return (
-    <div className="application-container" style={{ maxWidth: 860 }}>
+    <div className="application-container" style={{ maxWidth: 880 }}>
       <div style={{ marginBottom: "2rem" }}>
         <h1>Renew Student Bus Pass</h1>
         <p style={{ color: "var(--text-muted)" }}>
-          Extend the validity of your bus pass with verified round-trip distance and calculated fare.
+          Extend the validity of your bus pass, confirm your stop & village details manually, and calculate distance-based renewal fare.
         </p>
       </div>
 
@@ -207,7 +212,7 @@ const RenewPass = () => {
           <form onSubmit={handleSubmit}>
             {/* Step 1: Select Pass */}
             <div className="form-group" style={{ marginBottom: "1.5rem" }}>
-              <label>Select Bus Pass to Renew</label>
+              <label>1. Select Bus Pass to Renew</label>
               <select
                 className="form-select"
                 value={selectedPass ? selectedPass._id : ""}
@@ -224,16 +229,16 @@ const RenewPass = () => {
               </select>
             </div>
 
-            {/* Step 2: Home PIN Code Verification (No toll toggle; handled by backend) */}
+            {/* Step 2: Home PIN Code Verification */}
             <div style={{ marginBottom: "1.75rem" }}>
               <h3 style={{ fontSize: "1.05rem", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: 8 }}>
                 <MapPin size={18} color="var(--primary)" />
-                Home PIN Code & Fare Verification
+                2. Home Postal PIN Code & Fare Verification
               </h3>
 
               <div className="form-group">
                 <label>Home Postal PIN Code</label>
-                <div style={{ display: "flex", gap: "0.75rem", maxWidth: 500 }}>
+                <div style={{ display: "flex", gap: "0.75rem", maxWidth: 520 }}>
                   <div style={{ position: "relative", flex: 1 }}>
                     <MapPin size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
                     <input
@@ -241,7 +246,7 @@ const RenewPass = () => {
                       maxLength={6}
                       value={pincode}
                       onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
-                      placeholder="e.g. 560034"
+                      placeholder="e.g. 534101"
                       className="form-input"
                       style={{ paddingLeft: 42 }}
                     />
@@ -256,8 +261,8 @@ const RenewPass = () => {
                     {calculatingFare ? "Calculating..." : "Update Fare"}
                   </button>
                 </div>
-                <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 4 }}>
-                  Distance and toll rates are evaluated automatically by the backend.
+                <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 6, display: "block" }}>
+                  Fare rate: <strong>₹650/month</strong> for same college PIN code ({fareData?.collegePincode || "534101"}), or <strong>₹50 default base + ₹1.5/km (toll) / ₹1.0/km (toll-free)</strong>.
                 </small>
               </div>
 
@@ -269,49 +274,176 @@ const RenewPass = () => {
               )}
             </div>
 
-            {/* Step 3: Verified Commute Route Details */}
+            {/* Step 3: Manual Student Stop Details */}
+            <div style={{ marginBottom: "1.75rem", padding: "1.25rem", background: "#f8fafc", borderRadius: "var(--radius-md)", border: "1px solid var(--card-border)" }}>
+              <h3 style={{ fontSize: "1.05rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text-main)" }}>
+                <Navigation size={18} color="var(--primary)" />
+                3. Student Stop & Commute Details (Manual Input)
+              </h3>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>
+                    Village / Town Name <span style={{ color: "var(--danger)" }}>*</span>
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <Home size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
+                    <input
+                      type="text"
+                      value={villageTown}
+                      onChange={(e) => setVillageTown(e.target.value)}
+                      placeholder="e.g. Tadepalligudem / Pentapadu"
+                      className="form-input"
+                      style={{ paddingLeft: 42 }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>
+                    Boarding / Pickup Stop Name <span style={{ color: "var(--danger)" }}>*</span>
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <Compass size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
+                    <input
+                      type="text"
+                      value={stopName}
+                      onChange={(e) => setStopName(e.target.value)}
+                      placeholder="e.g. Main Bus Stand / Clock Tower"
+                      className="form-input"
+                      style={{ paddingLeft: 42 }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ gridColumn: "1 / -1", marginBottom: 0 }}>
+                  <label>
+                    Drop Location (Campus Arrival & Return) <span style={{ color: "var(--danger)" }}>*</span>
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <MapPin size={18} color="var(--text-muted)" style={{ position: "absolute", left: 14, top: 14 }} />
+                    <input
+                      type="text"
+                      value={dropPoint}
+                      onChange={(e) => setDropPoint(e.target.value)}
+                      placeholder="e.g. College Campus Main Gate"
+                      className="form-input"
+                      style={{ paddingLeft: 42 }}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Commute Summary Cards */}
+              {(villageTown || stopName) && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                    gap: "1rem",
+                    marginTop: "1.25rem"
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      padding: "1rem 1.25rem",
+                      borderRadius: 8,
+                      border: "1px solid var(--card-border)"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d97706", fontWeight: 700, fontSize: "0.82rem", marginBottom: 6 }}>
+                      <Sunrise size={16} /> MORNING COMMUTE
+                    </div>
+                    <div style={{ fontSize: "0.85rem" }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>BOARDING PICKUP:</div>
+                      <strong style={{ color: "var(--text-main)" }}>
+                        {stopName ? `${stopName}, ` : ""}{villageTown || "Your Village/Town"}
+                      </strong>
+                    </div>
+                    <div style={{ fontSize: "0.85rem", marginTop: 6 }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>CAMPUS DROP:</div>
+                      <span style={{ color: "var(--text-main)" }}>{dropPoint || "College Campus, India"}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      padding: "1rem 1.25rem",
+                      borderRadius: 8,
+                      border: "1px solid var(--card-border)"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#4f46e5", fontWeight: 700, fontSize: "0.82rem", marginBottom: 6 }}>
+                      <Sunset size={16} /> EVENING RETURN
+                    </div>
+                    <div style={{ fontSize: "0.85rem" }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>CAMPUS PICKUP:</div>
+                      <span style={{ color: "var(--text-main)" }}>{dropPoint || "College Campus, India"}</span>
+                    </div>
+                    <div style={{ fontSize: "0.85rem", marginTop: 6 }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>RETURN DROP:</div>
+                      <strong style={{ color: "var(--text-main)" }}>
+                        {stopName ? `${stopName}, ` : ""}{villageTown || "Your Village/Town"}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Step 4: Verified Commute Route Details */}
             {fareData && (
               <div
                 style={{
                   marginBottom: "2rem",
                   padding: "1.5rem",
                   borderRadius: "var(--radius-md)",
-                  background: "linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(59, 130, 246, 0.08) 100%)",
-                  border: "1px solid #bfdbfe"
+                  background: fareData.isSamePincode
+                    ? "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.09) 100%)"
+                    : "linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(59, 130, 246, 0.08) 100%)",
+                  border: `1px solid ${fareData.isSamePincode ? "#a7f3d0" : "#bfdbfe"}`
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "1rem" }}>
-                  <CheckCircle2 color="#2563eb" size={20} />
-                  <h3 style={{ fontSize: "1.05rem", margin: 0, color: "var(--text-main)" }}>
-                    Commute Route & Fare
-                  </h3>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                    gap: "1rem",
-                    marginBottom: "1rem"
-                  }}
-                >
-                  <div style={{ background: "#ffffff", padding: "1rem", borderRadius: 8, border: "1px solid var(--card-border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d97706", fontWeight: 700, fontSize: "0.85rem", marginBottom: 4 }}>
-                      <Sunrise size={16} /> MORNING PICKUP (Home)
-                    </div>
-                    <strong style={{ fontSize: "0.9rem", color: "var(--text-main)" }}>
-                      {fareData.originAddress}
-                    </strong>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircle2 color={fareData.isSamePincode ? "#059669" : "#2563eb"} size={20} />
+                    <h3 style={{ fontSize: "1.05rem", margin: 0, color: "var(--text-main)" }}>
+                      4. Commute Route & Fare
+                    </h3>
                   </div>
 
-                  <div style={{ background: "#ffffff", padding: "1rem", borderRadius: 8, border: "1px solid var(--card-border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#4f46e5", fontWeight: 700, fontSize: "0.85rem", marginBottom: 4 }}>
-                      <Sunset size={16} /> EVENING RETURN DROP (Home)
-                    </div>
-                    <strong style={{ fontSize: "0.9rem", color: "var(--text-main)" }}>
-                      {fareData.originAddress}
-                    </strong>
-                  </div>
+                  {fareData.isSamePincode ? (
+                    <span
+                      style={{
+                        background: "#d1fae5",
+                        color: "#065f46",
+                        padding: "0.3rem 0.75rem",
+                        borderRadius: 20,
+                        fontSize: "0.8rem",
+                        fontWeight: 700
+                      }}
+                    >
+                      🎉 Same Pincode Concession Rate: ₹650 / Month
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        background: "#e0e7ff",
+                        color: "#3730a3",
+                        padding: "0.3rem 0.75rem",
+                        borderRadius: 20,
+                        fontSize: "0.8rem",
+                        fontWeight: 700
+                      }}
+                    >
+                      Standard Route: Base ₹50 + ₹{fareData.ratePerKm}/km
+                    </span>
+                  )}
                 </div>
 
                 <div
@@ -340,7 +472,7 @@ const RenewPass = () => {
                   </div>
                   <div>
                     <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>DAILY FARE</div>
-                    <div style={{ fontWeight: 800, color: "#047857" }}>₹{fareData.totalFare}</div>
+                    <div style={{ fontWeight: 800, color: "#047857" }}>₹{fareData.dailyFare}</div>
                   </div>
                 </div>
               </div>
@@ -368,9 +500,16 @@ const RenewPass = () => {
               </div>
             )}
 
-            {/* Step 4: Duration Selection with Prices */}
+            {/* Step 5: Duration Selection with Prices */}
             <div className="form-group">
-              <label>Select Renewal Duration</label>
+              <label>
+                5. Select Renewal Duration{" "}
+                {fareData && (
+                  <span style={{ color: "var(--primary)", fontWeight: 600 }}>
+                    ({fareData.isSamePincode ? "Local Flat Rate Concession: ₹650/month" : "Dynamic Distance Pricing"})
+                  </span>
+                )}
+              </label>
               <div className="pass-type-selector">
                 {passTypes.map((pt) => {
                   const calculatedPrice = getPassPrice(pt.title);
@@ -410,11 +549,13 @@ const RenewPass = () => {
                 }}
               >
                 <div>
-                  <span style={{ fontSize: "0.9rem", color: "#166534" }}>
+                  <span style={{ fontSize: "0.9rem", color: "#166534", fontWeight: 700 }}>
                     Total {passType} Renewal Fee:
                   </span>
                   <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                    Valid for all round trips between home pickup & campus
+                    {fareData.isSamePincode
+                      ? "Local student concession applied (₹650/month)"
+                      : "Base ₹50 + round-trip commute included for renewal validity"}
                   </div>
                 </div>
                 <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "#15803d" }}>

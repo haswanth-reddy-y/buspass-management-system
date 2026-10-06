@@ -222,8 +222,11 @@ const ManageApplications = () => {
               <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: "1rem", borderRadius: "var(--radius-sm)", marginBottom: "1.25rem", fontSize: "0.9rem" }}>
                 <div><strong>Student:</strong> {selectedApp.studentName} ({selectedApp.studentId})</div>
                 <div><strong>Commute:</strong> {selectedApp.source} ➔ {selectedApp.destination}</div>
+                {selectedApp.villageTown && <div><strong>Village / Town:</strong> {selectedApp.villageTown}</div>}
+                {selectedApp.stopName && <div><strong>Boarding Stop:</strong> {selectedApp.stopName}</div>}
+                {selectedApp.dropPoint && <div><strong>Drop Point:</strong> {selectedApp.dropPoint}</div>}
                 {selectedApp.pincode && <div><strong>PIN Code:</strong> {selectedApp.pincode}</div>}
-                {selectedApp.dailyFare > 0 && <div><strong>Daily Fare:</strong> ₹{selectedApp.dailyFare}</div>}
+                {selectedApp.dailyFare > 0 && <div><strong>Daily Fare:</strong> ₹{selectedApp.dailyFare} | <strong>Total Fare:</strong> ₹{selectedApp.totalFare}</div>}
                 <div><strong>Pass Duration:</strong> {selectedApp.passType}</div>
               </div>
 

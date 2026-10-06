@@ -20,25 +20,30 @@ assert.strictEqual(isValidIndianPincode(null), false, "Null should be invalid");
 console.log("✓ Pincode validation tests passed.");
 
 // 2. Test Fare Computation
+// Outside pincode:
 // One way = 15 km -> Round trip = 30 km
-// Without tolls: 30 * 3.0 = 90
-const noToll = computeFareDetails(15, false);
+// Without tolls: Base ₹50 + (30 * 1.0) = ₹80.0
+const noToll = computeFareDetails(15, false, false);
 assert.strictEqual(noToll.roundTripDistanceKm, 30);
-assert.strictEqual(noToll.ratePerKm, 3.0);
-assert.strictEqual(noToll.totalFare, 90.0);
+assert.strictEqual(noToll.ratePerKm, 1.0);
+assert.strictEqual(noToll.dailyFare, 80.0);
+assert.strictEqual(noToll.monthlyFare, 1760.0); // 80 * 22
 
-// With tolls: 30 * 4.5 = 135
-const withToll = computeFareDetails(15, true);
+// With tolls: Base ₹50 + (30 * 1.5) = ₹95.0
+const withToll = computeFareDetails(15, true, false);
 assert.strictEqual(withToll.roundTripDistanceKm, 30);
-assert.strictEqual(withToll.ratePerKm, 4.5);
-assert.strictEqual(withToll.totalFare, 135.0);
+assert.strictEqual(withToll.ratePerKm, 1.5);
+assert.strictEqual(withToll.dailyFare, 95.0);
 
-// Floating point precision check: one way = 12.34 km -> Round trip = 24.68 km
-// 24.68 * 4.5 = 111.06
-const floatWithToll = computeFareDetails(12.34, true);
-assert.strictEqual(floatWithToll.roundTripDistanceKm, 24.68);
-assert.strictEqual(floatWithToll.totalFare, 111.06);
-console.log("✓ Fare calculation formula tests passed.");
+// Same Pincode concession rule:
+// ₹650 / month, ₹1950 / quarter, ₹6500 / year
+const samePin = computeFareDetails(0, false, true);
+assert.strictEqual(samePin.isSamePincode, true);
+assert.strictEqual(samePin.monthlyFare, 650.0);
+assert.strictEqual(samePin.quarterlyFare, 1950.0);
+assert.strictEqual(samePin.yearlyFare, 6500.0);
+assert.strictEqual(samePin.dailyFare, 29.55);
+console.log("✓ Fare calculation formula & same pincode tests passed.");
 
 // 3. Test Controller Request Validation
 const mockRes = () => {
