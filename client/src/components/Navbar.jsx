@@ -1,11 +1,14 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Bus, LogOut, ShieldCheck, User as UserIcon } from "lucide-react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   const handleLogout = () => {
     logout();
@@ -111,7 +114,7 @@ const Navbar = () => {
               <LogOut size={16} /> Logout
             </button>
           </div>
-        ) : (
+        ) : isAuthPage ? null : (
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <Link to="/login" className="btn btn-secondary" style={{ padding: "0.5rem 1rem" }}>
               Login

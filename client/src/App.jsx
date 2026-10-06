@@ -16,6 +16,7 @@ import ApplyPass from "./pages/ApplyPass";
 import RenewPass from "./pages/RenewPass";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import DigitalPass from "./pages/DigitalPass";
+import FareCalculator from "./pages/FareCalculator";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -37,6 +38,9 @@ const App = () => {
         <main className="main-content">
           <div key={location.pathname} className="page-transition">
             <Routes location={location}>
+              {/* Public Routes */}
+              <Route path="/fare-calculator" element={<FareCalculator />} />
+
               {/* Public Auth Routes */}
               <Route
                 path="/login"

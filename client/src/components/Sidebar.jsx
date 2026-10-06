@@ -9,7 +9,8 @@ import {
   QrCode,
   Users,
   FileCheck,
-  BarChart3
+  BarChart3,
+  Calculator
 } from "lucide-react";
 
 const Sidebar = () => {

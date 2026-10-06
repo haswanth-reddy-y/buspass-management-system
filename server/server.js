@@ -15,6 +15,7 @@ const userRoutes = require("./routes/userRoutes");
 const passRoutes = require("./routes/passRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const fareRoutes = require("./routes/fareRoutes");
 
 const app = express();
 
@@ -30,10 +31,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint (doesn't require DB)
+// Health check & stateless utility endpoints (don't require DB)
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Bus Pass Management System API is live!" });
 });
+app.use("/api/fare", fareRoutes);
 
 // Enforce DB Connection check & auto-reconnect for API resources
 app.use("/api", checkDbConnection);

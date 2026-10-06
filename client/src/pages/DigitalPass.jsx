@@ -88,6 +88,18 @@ const DigitalPass = () => {
                 </div>
               </div>
 
+              {(activePass.pickupPoint || activePass.totalFare > 0) && (
+                <div style={{ margin: "0.75rem 0", padding: "0.6rem 0.85rem", background: "rgba(255,255,255,0.05)", borderRadius: "6px", fontSize: "0.78rem" }}>
+                  <div><strong>🌅 Morning Pickup:</strong> {activePass.pickupPoint || activePass.source}</div>
+                  <div style={{ marginTop: 3 }}><strong>🌇 Evening Drop:</strong> {activePass.dropPoint || activePass.source}</div>
+                  {activePass.totalFare > 0 && (
+                    <div style={{ marginTop: 3, color: "#34d399", fontWeight: 700 }}>
+                      Pass Fare: ₹{activePass.totalFare} ({activePass.roundTripDistanceKm || 0} km daily)
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="ticket-info-grid">
                 <div className="ticket-info-item">
                   <label>Pass ID</label>

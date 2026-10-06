@@ -9,6 +9,14 @@ const busPassSchema = new mongoose.Schema(
     route: { type: String, required: true },
     source: { type: String, required: true },
     destination: { type: String, required: true },
+    pincode: { type: String, default: "" },
+    pickupPoint: { type: String, default: "" }, // Morning Pickup from Home
+    dropPoint: { type: String, default: "" },   // Evening Drop to Home
+    oneWayDistanceKm: { type: Number, default: 0 },
+    roundTripDistanceKm: { type: Number, default: 0 },
+    dailyFare: { type: Number, default: 0 },
+    totalFare: { type: Number, default: 0 },
+    routeHasTolls: { type: Boolean, default: false },
     passType: { type: String, enum: ["Monthly", "Quarterly", "Yearly"], default: "Monthly" },
     issueDate: { type: Date, default: Date.now },
     expiryDate: { type: Date, required: true },

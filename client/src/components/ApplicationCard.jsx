@@ -40,6 +40,26 @@ const ApplicationCard = ({ application }) => {
           <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
             Route: {application.route}
           </div>
+
+          {(application.pickupPoint || application.totalFare > 0) && (
+            <div style={{ marginTop: "0.75rem", padding: "0.5rem 0.75rem", background: "#f8fafc", borderRadius: "6px", fontSize: "0.78rem", border: "1px solid var(--card-border)" }}>
+              {application.pickupPoint && (
+                <div style={{ marginBottom: "0.2rem" }}>
+                  <strong>🌅 Morning Pickup:</strong> {application.pickupPoint}
+                </div>
+              )}
+              {application.dropPoint && (
+                <div style={{ marginBottom: "0.2rem" }}>
+                  <strong>🌇 Evening Drop:</strong> {application.dropPoint}
+                </div>
+              )}
+              {application.totalFare > 0 && (
+                <div style={{ color: "#047857", fontWeight: 700, marginTop: "0.3rem" }}>
+                  Pass Fare: ₹{application.totalFare} ({application.roundTripDistanceKm} km round trip/day)
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {application.rejectionReason && (

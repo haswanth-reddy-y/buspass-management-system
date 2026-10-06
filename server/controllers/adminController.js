@@ -62,7 +62,7 @@ const getAllApplications = async (req, res, next) => {
 // @route   PUT /api/admin/applications/:id/status
 const updateApplicationStatus = async (req, res, next) => {
   try {
-    const { status, rejectionReason, remarks } = req.body;
+    const { status, rejectionReason, remarks, route: allottedRoute } = req.body;
 
     if (!["Approved", "Rejected"].includes(status)) {
       return res.status(400).json({ message: "Invalid status. Must be Approved or Rejected." });
@@ -79,6 +79,11 @@ const updateApplicationStatus = async (req, res, next) => {
 
     if (application.status !== "Pending") {
       return res.status(400).json({ message: `Application is already ${application.status}.` });
+    }
+
+    // If admin allotting or updating route during approval
+    if (status === "Approved" && allottedRoute && allottedRoute.trim()) {
+      application.route = allottedRoute.trim();
     }
 
     application.status = status;
@@ -116,6 +121,14 @@ const updateApplicationStatus = async (req, res, next) => {
         route: application.route,
         source: application.source,
         destination: application.destination,
+        pincode: application.pincode,
+        pickupPoint: application.pickupPoint,
+        dropPoint: application.dropPoint,
+        oneWayDistanceKm: application.oneWayDistanceKm,
+        roundTripDistanceKm: application.roundTripDistanceKm,
+        dailyFare: application.dailyFare,
+        totalFare: application.totalFare,
+        routeHasTolls: application.routeHasTolls,
         passType: application.passType,
         issueDate: new Date(),
         expiryDate: expiry,
@@ -124,6 +137,8 @@ const updateApplicationStatus = async (req, res, next) => {
           passId,
           studentId: application.studentId,
           route: application.route,
+          pickupPoint: application.pickupPoint,
+          dropPoint: application.dropPoint,
           expiry: expiry.toISOString()
         })
       });

@@ -18,7 +18,26 @@ const ManageApplications = () => {
   const [modalAction, setModalAction] = useState(""); // "Approve" or "Reject"
   const [rejectionReason, setRejectionReason] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [allottedRoute, setAllottedRoute] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  const routeOptions = [
+    "Route 01 - Bhimavaram → Tadepalligudem",
+    "Route 02 - Tadepalligudem → Bhimavaram",
+    "Route 03 - Eluru → Tadepalligudem",
+    "Route 04 - Tadepalligudem → Eluru",
+    "Route 05 - Bhimavaram → Eluru",
+    "Route 06 - Eluru → Bhimavaram",
+    "Route 07 - Tanuku → Tadepalligudem",
+    "Route 08 - Tadepalligudem → Tanuku",
+    "Route 09 - Tanuku → Bhimavaram",
+    "Route 10 - Bhimavaram → Tanuku",
+    "Route 11 - Nidadavole → Tadepalligudem",
+    "Route 12 - Tadepalligudem → Nidadavole",
+    "Route 13 - Nidadavole → Tanuku",
+    "Route 14 - Kovvur → Nidadavole",
+    "Route 15 - Kovvur → Rajahmundry"
+  ];
 
   const loadData = async () => {
     try {
@@ -41,6 +60,7 @@ const ManageApplications = () => {
     setModalAction(action);
     setRejectionReason("");
     setRemarks("");
+    setAllottedRoute(app.route && app.route !== "Pending Admin Allotment" ? app.route : routeOptions[0]);
   };
 
   const closeModal = () => {
@@ -57,10 +77,24 @@ const ManageApplications = () => {
       return;
     }
 
+    if (modalAction === "Approve" && (!allottedRoute || !allottedRoute.trim())) {
+      alert("Please allot an official bus route before approving the application.");
+      return;
+    }
+
     setActionLoading(true);
     try {
       const status = modalAction === "Approve" ? "Approved" : "Rejected";
-      await updateApplicationStatus(selectedApp._id, { status, rejectionReason, remarks }, token);
+      await updateApplicationStatus(
+        selectedApp._id,
+        {
+          status,
+          rejectionReason,
+          remarks,
+          route: allottedRoute
+        },
+        token
+      );
       closeModal();
       loadData();
     } catch (err) {
@@ -187,9 +221,30 @@ const ManageApplications = () => {
             <form onSubmit={handleStatusUpdate}>
               <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: "1rem", borderRadius: "var(--radius-sm)", marginBottom: "1.25rem", fontSize: "0.9rem" }}>
                 <div><strong>Student:</strong> {selectedApp.studentName} ({selectedApp.studentId})</div>
-                <div><strong>Route:</strong> {selectedApp.source} ➔ {selectedApp.destination}</div>
+                <div><strong>Commute:</strong> {selectedApp.source} ➔ {selectedApp.destination}</div>
+                {selectedApp.pincode && <div><strong>PIN Code:</strong> {selectedApp.pincode}</div>}
+                {selectedApp.dailyFare > 0 && <div><strong>Daily Fare:</strong> ₹{selectedApp.dailyFare}</div>}
                 <div><strong>Pass Duration:</strong> {selectedApp.passType}</div>
               </div>
+
+              {modalAction === "Approve" && (
+                <div className="form-group" style={{ marginBottom: "1.25rem" }}>
+                  <label style={{ fontWeight: 600 }}>Allot Official Bus Route Line *</label>
+                  <select
+                    className="form-select"
+                    value={allottedRoute}
+                    onChange={(e) => setAllottedRoute(e.target.value)}
+                    required
+                  >
+                    {routeOptions.map((r, i) => (
+                      <option key={i} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 4 }}>
+                    The administrator must manually assign the official bus route line before approving.
+                  </small>
+                </div>
+              )}
 
               {modalAction === "Reject" && (
                 <div className="form-group">

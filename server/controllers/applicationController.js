@@ -6,7 +6,20 @@ const { generateApplicationId } = require("../utils/generatePassId");
 // @route   POST /api/applications/apply
 const applyForPass = async (req, res, next) => {
   try {
-    const { route, source, destination, passType } = req.body;
+    const {
+      route,
+      source,
+      destination,
+      pincode,
+      pickupPoint,
+      dropPoint,
+      oneWayDistanceKm,
+      roundTripDistanceKm,
+      dailyFare,
+      totalFare,
+      routeHasTolls,
+      passType
+    } = req.body;
 
     if (!route || !source || !destination) {
       return res.status(400).json({ message: "Route, Source, and Destination are required." });
@@ -41,6 +54,14 @@ const applyForPass = async (req, res, next) => {
       route,
       source,
       destination,
+      pincode: pincode || "",
+      pickupPoint: pickupPoint || source,
+      dropPoint: dropPoint || source,
+      oneWayDistanceKm: oneWayDistanceKm || 0,
+      roundTripDistanceKm: roundTripDistanceKm || 0,
+      dailyFare: dailyFare || 0,
+      totalFare: totalFare || 0,
+      routeHasTolls: Boolean(routeHasTolls),
       passType: passType || "Monthly",
       applicationType: "New"
     });
@@ -58,7 +79,18 @@ const applyForPass = async (req, res, next) => {
 // @route   POST /api/applications/renew
 const renewPass = async (req, res, next) => {
   try {
-    const { passId, passType } = req.body;
+    const {
+      passId,
+      passType,
+      pincode,
+      pickupPoint,
+      dropPoint,
+      oneWayDistanceKm,
+      roundTripDistanceKm,
+      dailyFare,
+      totalFare,
+      routeHasTolls
+    } = req.body;
 
     const existingPass = await BusPass.findOne({ student: req.user._id, status: { $in: ["Active", "Expired"] } });
 
@@ -85,6 +117,14 @@ const renewPass = async (req, res, next) => {
       route: existingPass.route,
       source: existingPass.source,
       destination: existingPass.destination,
+      pincode: pincode || existingPass.pincode || "",
+      pickupPoint: pickupPoint || existingPass.pickupPoint || existingPass.source,
+      dropPoint: dropPoint || existingPass.dropPoint || existingPass.source,
+      oneWayDistanceKm: oneWayDistanceKm !== undefined ? oneWayDistanceKm : (existingPass.oneWayDistanceKm || 0),
+      roundTripDistanceKm: roundTripDistanceKm !== undefined ? roundTripDistanceKm : (existingPass.roundTripDistanceKm || 0),
+      dailyFare: dailyFare !== undefined ? dailyFare : (existingPass.dailyFare || 0),
+      totalFare: totalFare !== undefined ? totalFare : (existingPass.totalFare || 0),
+      routeHasTolls: routeHasTolls !== undefined ? Boolean(routeHasTolls) : Boolean(existingPass.routeHasTolls),
       passType: passType || existingPass.passType,
       applicationType: "Renewal"
     });

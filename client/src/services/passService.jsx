@@ -59,3 +59,13 @@ export const fetchMyApplications = async (token) => {
   });
   return handleResponse(response);
 };
+
+export const calculateBusFare = async (studentPincode, routeHasTolls) => {
+  const response = await fetch("/api/fare/calculate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ studentPincode, routeHasTolls })
+  });
+  return handleResponse(response);
+};
+
