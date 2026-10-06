@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { fetchMyPasses, fetchMyApplications } from "../services/passService";
 import PassCard from "../components/PassCard";
 import ApplicationCard from "../components/ApplicationCard";
+import PassExpiryAlert from "../components/PassExpiryAlert";
 import { Bus, Clock, FilePlus, QrCode, ArrowRight, AlertCircle, RefreshCw } from "lucide-react";
 import "../styles/dashboard.css";
 
@@ -44,6 +45,9 @@ const Dashboard = () => {
           Manage your bus pass applications, view status, and access your digital pass ticket.
         </p>
       </div>
+
+      {/* Pop-up Notification & Warning Banner if pass is expiring within 7 days */}
+      <PassExpiryAlert activePass={activePass} />
 
       {error && (
         <div className="alert alert-error">

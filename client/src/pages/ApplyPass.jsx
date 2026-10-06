@@ -235,7 +235,7 @@ const ApplyPass = () => {
                 </button>
               </div>
               <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 6, display: "block" }}>
-                Fare rate: <strong>₹650/month</strong> for same college PIN code ({fareData?.collegePincode || "534101"}), or <strong>₹50 default base + ₹1.5/km (toll) / ₹1.0/km (toll-free)</strong>.
+                Enter your 6-digit postal PIN code to automatically calculate route commute fare.
               </small>
             </div>
 

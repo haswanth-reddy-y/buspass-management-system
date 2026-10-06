@@ -262,7 +262,7 @@ const RenewPass = () => {
                   </button>
                 </div>
                 <small style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: 6, display: "block" }}>
-                  Fare rate: <strong>₹650/month</strong> for same college PIN code ({fareData?.collegePincode || "534101"}), or <strong>₹50 default base + ₹1.5/km (toll) / ₹1.0/km (toll-free)</strong>.
+                  Verify your 6-digit home postal PIN code to recalculate renewal commute fare.
                 </small>
               </div>
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { fetchMyPasses } from "../services/passService";
 import { QRCodeSVG } from "qrcode.react";
+import PassExpiryAlert from "../components/PassExpiryAlert";
 import {
   Bus,
   Calendar,
@@ -101,6 +102,11 @@ const DigitalPass = () => {
         </div>
       ) : activePass ? (
         <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}>
+          {/* Pop-up Expiry Notification & Alert Banner */}
+          <div className="no-print" style={{ width: "100%", maxWidth: 440 }}>
+            <PassExpiryAlert activePass={activePass} />
+          </div>
+
           <div className="ticket-pass">
             <div className="ticket-header">
               <div className="ticket-logo">
