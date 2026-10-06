@@ -21,7 +21,7 @@ const seedDatabase = async () => {
     await Application.deleteMany({});
 
     console.log("Seeding Users...");
-    const adminPassword = await bcrypt.hash("admin123", 10);
+    const adminPassword = await bcrypt.hash("admin@123", 10);
     const studentPassword = await bcrypt.hash("student123", 10);
 
     const admin = await User.create({
