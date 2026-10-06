@@ -1,84 +1,23 @@
-/* ==========================================================================
-   Cinematic & Photorealistic Travel Credentials Page Styling
-   - Airport Terminal & High-Speed Train Twilight Backdrop
-   - Bokeh Lighting & Soft Depth of Field
-   - Subtle Dark Vignette Overlay for High-Contrast UI
-   - Frosted Glassmorphism Card with Perfectly Adjusted Buttons
-   ========================================================================== */
-
-.auth-main-layout {
-  padding: 0 !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  width: 100% !important;
-}
-
 .auth-container {
-  min-height: calc(100vh - 65px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.25rem;
-  position: relative;
-  /* Cinematic Twilight Travel Background with Vignette Overlay */
-  background-image:
-    radial-gradient(ellipse at center, rgba(15, 23, 42, 0.45) 0%, rgba(5, 10, 20, 0.88) 100%),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 0%, rgba(8, 14, 28, 0.85) 100%),
-    url('/images/auth-bg.jpg');
-  background-position: center center;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  overflow: hidden;
+  padding: 2rem 1rem;
+  background: var(--bg-dark);
 }
 
-/* Atmospheric Glow Accent */
-.auth-container::before {
-  content: "";
-  position: absolute;
-  top: 15%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0) 70%);
-  filter: blur(60px);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Frosted Glassmorphic Credentials Card */
 .auth-card {
   width: 100%;
-  max-width: 470px;
-  padding: 2.75rem 2.25rem;
-  background: rgba(15, 23, 42, 0.75);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow:
-    0 25px 60px -15px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  color: #ffffff;
-  position: relative;
-  z-index: 2;
-  animation: authCardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: 480px;
+  padding: 2.75rem;
+  border: 1px solid var(--card-border);
+  background: var(--bg-surface);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  animation: pageSlideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes authCardEnter {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Card Header */
 .auth-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -89,173 +28,20 @@
   align-items: center;
   gap: 0.75rem;
   font-family: 'Outfit', sans-serif;
-  font-size: 1.85rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-main);
   margin-bottom: 0.4rem;
-  letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.92rem;
-  line-height: 1.45;
 }
 
-/* Form Groups & Inputs */
-.auth-card .form-group {
-  margin-bottom: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.auth-card .form-group label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  display: block;
-}
-
-.auth-card .form-input {
-  width: 100%;
-  height: 48px;
-  padding: 0 1rem 0 2.75rem;
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-  color: #ffffff;
-  font-size: 0.92rem;
-  font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.auth-card .form-input::placeholder {
-  color: #64748b;
-}
-
-.auth-card .form-input:focus {
-  outline: none;
-  background: rgba(30, 41, 59, 0.95);
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.32);
-}
-
-/* Perfectly Adjusted Action Buttons */
-.auth-submit-btn {
-  width: 100%;
-  height: 50px;
-  margin-top: 1.25rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  font-size: 0.98rem;
-  font-weight: 700;
-  font-family: inherit;
-  letter-spacing: 0.02em;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.auth-submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-
-.auth-submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
-}
-
-.auth-submit-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Quick Demo Shortcut Section */
-.auth-demo-section {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.auth-demo-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  color: #94a3b8;
-  text-align: center;
-}
-
-.auth-demo-buttons {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-}
-
-.auth-demo-btn {
-  flex: 1;
-  height: 38px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.auth-demo-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
-  transform: translateY(-1px);
-}
-
-.auth-demo-btn:active {
-  transform: translateY(0);
-}
-
-/* Card Footer */
 .auth-footer {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   text-align: center;
-  font-size: 0.88rem;
-  color: #94a3b8;
-}
-
-.auth-footer a {
-  color: #60a5fa;
-  font-weight: 600;
-  transition: color 0.18s ease;
-}
-
-.auth-footer a:hover {
-  color: #93c5fd;
-  text-decoration: underline;
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .auth-card {
-    padding: 2rem 1.5rem;
-    border-radius: 16px;
-  }
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }

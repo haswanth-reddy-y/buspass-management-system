@@ -163,7 +163,8 @@ const Register = () => {
 
           <button
             type="submit"
-            className="auth-submit-btn"
+            className="btn btn-primary"
+            style={{ width: "100%", marginTop: "1rem", padding: "0.85rem" }}
             disabled={loading}
           >
             {loading ? "Creating account..." : <>Create Account <ArrowRight size={18} /></>}

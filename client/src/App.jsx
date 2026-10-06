@@ -28,8 +28,6 @@ const App = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
-
   return (
     <div className="app-layout">
       <Navbar />
@@ -37,7 +35,7 @@ const App = () => {
       <div className="app-body">
         {user && <Sidebar />}
 
-        <main className={`main-content ${isAuthPage ? "auth-main-layout" : ""}`}>
+        <main className="main-content">
           <div key={location.pathname} className="page-transition">
             <Routes location={location}>
               {/* Public Routes */}

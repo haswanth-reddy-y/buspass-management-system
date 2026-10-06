@@ -85,38 +85,13 @@ const Login = () => {
 
           <button
             type="submit"
-            className="auth-submit-btn"
+            className="btn btn-primary"
+            style={{ width: "100%", marginTop: "1rem", padding: "0.85rem" }}
             disabled={loading}
           >
             {loading ? "Signing in..." : <>Sign In <ArrowRight size={18} /></>}
           </button>
         </form>
-
-        <div className="auth-demo-section">
-          <div className="auth-demo-label">Quick Demo Access</div>
-          <div className="auth-demo-buttons">
-            <button
-              type="button"
-              className="auth-demo-btn"
-              onClick={() => {
-                setEmail("admin@buspass.com");
-                setPassword("admin123");
-              }}
-            >
-              🛡️ Admin
-            </button>
-            <button
-              type="button"
-              className="auth-demo-btn"
-              onClick={() => {
-                setEmail("student@university.edu");
-                setPassword("password123");
-              }}
-            >
-              🎓 Student
-            </button>
-          </div>
-        </div>
 
         <div className="auth-footer">
           Don't have an account? <Link to="/register">Register now</Link>
