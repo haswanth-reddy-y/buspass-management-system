@@ -133,7 +133,6 @@ Check `.env` in the root folder:
 ```env
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/buspass_db
-JWT_SECRET=super_secure_buspass_secret_key_2026
 VITE_API_URL=http://localhost:5000/api
 ```
 
@@ -146,6 +145,3 @@ npm run dev
 - Backend runs on: `http://localhost:5000`
 - Frontend runs on: `http://localhost:3000`
 
-### Default Admin Credentials
-- **Email**: `admin@buspass.com`
-- **Password**: `admin123`
